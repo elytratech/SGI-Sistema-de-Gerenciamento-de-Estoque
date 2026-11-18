@@ -2,71 +2,111 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>TechStore - Cadastrar Ativo</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore WMS - Cadastrar SKU</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="glass-panel">
-        <h1>Novo Ativo</h1>
-        <form action="/produto/novo" method="POST">
-            <div class="form-group">
-                <label>SKU:</label>
-                <input type="text" name="sku" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Nome Comercial:</label>
-                <input type="text" name="nome_comercial" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Fabricante:</label>
-                <input type="text" name="fabricante" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Categoria:</label>
-                <select name="id_categoria" class="form-control" required>
-                    <option value="">Selecione...</option>
-                    {% for c in categorias %}
-                    <option value="{{ c.id_categoria }}">{{ c.nome }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label>Fornecedor:</label>
-                <select name="id_fornecedor" class="form-control" required>
-                    <option value="">Selecione...</option>
-                    {% for f in fornecedores %}
-                    <option value="{{ f.id_fornecedor }}">{{ f.razao_social }}</option>
-                    {% endfor %}
-                </select>
-            </div>
 
-            <div class="form-group">
-                <label>Classificação:</label>
-                <select name="classificacao" class="form-control" required>
-                <option value="">Selecione...</option>
-                <option value="Hardware">Hardware</option>
-                <option value="Software">Software</option>
-                <option value="Periférico">Periférico</option>
-            </select>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand-box">
+            <div class="brand-icon">📦</div>
+            <div>
+                <div class="brand-title">TechStore</div>
+                <div class="brand-sub">WMS & Estoque</div>
+            </div>
         </div>
+        <div class="nav-label">Operações</div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item">📊 Posição de Estoque</a>
+            <a href="/movimentacao" class="nav-item">⇄ Entrada / Saída</a>
+            <a href="/produto/novo" class="nav-item active">➕ Cadastrar SKU</a>
+            <a href="/venda/checkout" class="nav-item">🛒 Expedição / PDV</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <span class="user-name">{{ session.get('nome', 'Operador') }}</span>
+                <span class="badge-perfil">{{ session.get('perfil', 'OPERADOR') }}</span>
+            </div>
+            <a href="/logout" class="btn btn-danger" style="width: 100%;">🚪 Encerrar Sessão</a>
+        </div>
+    </aside>
 
-            <div class="form-group">
-                <label>Preço de Venda:</label>
-                <input type="number" step="0.01" name="preco_venda" class="form-control" required>
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Cadastrar Novo SKU</h1>
+                <p>Inclusão de novo item, fornecedor e endereçamento no armazém</p>
             </div>
-            <div class="form-group">
-                <label>Quantidade em Estoque:</label>
-                <input type="number" name="quantidade_estoque" class="form-control" required>
-            </div>
-            <div class="form-group">
-                <label>Localização:</label>
-                <input type="text" name="localizacao" class="form-control" required>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn-glass">Salvar Ativo</button>
-                <a href="/" class="btn-glass" style="text-decoration: none;">Voltar</a>
-            </div>
-        </form>
-    </div>
+            <a href="/" class="btn">← Voltar ao Estoque</a>
+        </header>
+
+        <section class="panel-box" style="max-width: 860px;">
+            <form action="/produto/novo" method="POST">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Código SKU</label>
+                        <input type="text" name="sku" class="form-control" placeholder="Ex: HW-SSD-1TB" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nome Comercial do Item</label>
+                        <input type="text" name="nome_comercial" class="form-control" placeholder="Ex: SSD NVMe 1TB Kingston" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fabricante / Marca</label>
+                        <input type="text" name="fabricante" class="form-control" placeholder="Ex: Kingston" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Classificação</label>
+                        <select name="classificacao" class="form-control" required>
+                            <option value="">Selecione...</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Software">Software</option>
+                            <option value="Periférico">Periférico</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Categoria</label>
+                        <select name="id_categoria" class="form-control" required>
+                            <option value="">Selecione...</option>
+                            {% for c in categorias %}
+                            <option value="{{ c.id_categoria }}">{{ c.nome }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Fornecedor Homologado</label>
+                        <select name="id_fornecedor" class="form-control" required>
+                            <option value="">Selecione...</option>
+                            {% for f in fornecedores %}
+                            <option value="{{ f.id_fornecedor }}">{{ f.razao_social }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor Unitário (R$)</label>
+                        <input type="number" step="0.01" name="preco_venda" class="form-control" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Saldo Inicial em Estoque</label>
+                        <input type="number" name="quantidade_estoque" class="form-control" placeholder="0" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Endereçamento Físico (Corredor / Prateleira / Bin)</label>
+                    <input type="text" name="localizacao" class="form-control" placeholder="Ex: Rua A - Módulo 03 - Nível 2" required>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-success">✓ Salvar SKU no Inventário</button>
+                    <a href="/" class="btn">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
 </body>
 </html>

@@ -2,48 +2,86 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>TechStore - Lançar Movimentação</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TechStore WMS - Movimentação de Estoque</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-    <div class="glass-panel">
-        <h1>Lançar Movimentação</h1>
-        <p>Registar entrada ou saída de stock</p>
 
-        <form action="/movimentacao" method="POST">
-            <div class="form-group">
-                <label>Produto:</label>
-                <select name="id_produto" class="form-control" required>
-                    <option value="">Selecione um produto</option>
-                    {% for produto in produtos %}
-                        <option value="{{ produto.id_produto }}">{{ produto.sku }} - {{ produto.nome_comercial }} (Stock: {{ produto.quantidade_estoque }})</option>
-                    {% endfor %}
-                </select>
+<div class="app-shell">
+    <aside class="sidebar">
+        <div class="brand-box">
+            <div class="brand-icon">📦</div>
+            <div>
+                <div class="brand-title">TechStore</div>
+                <div class="brand-sub">WMS & Estoque</div>
             </div>
+        </div>
+        <div class="nav-label">Operações</div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item">📊 Posição de Estoque</a>
+            <a href="/movimentacao" class="nav-item active">⇄ Entrada / Saída</a>
+            <a href="/produto/novo" class="nav-item">➕ Cadastrar SKU</a>
+            <a href="/venda/checkout" class="nav-item">🛒 Expedição / PDV</a>
+        </nav>
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <span class="user-name">{{ session.get('nome', 'Operador') }}</span>
+                <span class="badge-perfil">{{ session.get('perfil', 'OPERADOR') }}</span>
+            </div>
+            <a href="/logout" class="btn btn-danger" style="width: 100%;">🚪 Encerrar Sessão</a>
+        </div>
+    </aside>
 
-            <div class="form-group">
-                <label>Tipo de Movimentação:</label>
-                <select name="tipo_operacao" class="form-control" required>
-                    <option value="Entrada">Entrada</option>
-                    <option value="Saída">Saída</option>
-                </select>
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Lançar Movimentação de Estoque</h1>
+                <p>Registre entradas de fornecedores, baixas manuais ou ajustes de inventário</p>
             </div>
+            <a href="/" class="btn">← Voltar ao Estoque</a>
+        </header>
 
-            <div class="form-group">
-                <label>Quantidade:</label>
-                <input type="number" name="quantidade" class="form-control" required min="1">
-            </div>
+        <section class="panel-box" style="max-width: 720px;">
+            <form action="/movimentacao" method="POST">
+                <div class="form-group">
+                    <label>Produto / SKU</label>
+                    <select name="id_produto" class="form-control" required>
+                        <option value="">Selecione um item do inventário...</option>
+                        {% for produto in produtos %}
+                            <option value="{{ produto.id_produto }}">{{ produto.sku }} — {{ produto.nome_comercial }} (Saldo atual: {{ produto.quantidade_estoque }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <div class="form-group">
-                <label>Justificativa:</label>
-                <input type="text" name="justificativa" class="form-control" required placeholder="Ex: Reposição, Venda, Avaria...">
-            </div>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Tipo de Operação</label>
+                        <select name="tipo_operacao" class="form-control" required>
+                            <option value="Entrada">📥 Entrada (Reposição / Devolução)</option>
+                            <option value="Saída">📤 Saída (Baixa / Consumo / Avaria)</option>
+                        </select>
+                    </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn-glass">Registar Movimentação</button>
-                <a href="/" class="btn-glass" style="text-decoration: none;">Voltar</a>
-            </div>
-        </form>
-    </div>
+                    <div class="form-group">
+                        <label>Quantidade Movimentada</label>
+                        <input type="number" name="quantidade" class="form-control" required min="1" placeholder="Ex: 10">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Motivo / Documento de Referência</label>
+                    <input type="text" name="justificativa" class="form-control" required placeholder="Ex: NF-e 45920, Ajuste de inventário rotativo, Avaria em transporte...">
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">✓ Confirmar Movimentação</button>
+                    <a href="/" class="btn">Cancelar</a>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
 </body>
 </html>

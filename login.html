@@ -9,31 +9,34 @@
 <body>
 
     <div class="glass-card">
-        <div style="text-align: center; margin-bottom: 25px;">
-            <h2 style="margin: 0; font-weight: bold;">TechStore SGI</h2>
-            <p style="margin: 5px 0 0 0; font-size: 13px; opacity: 0.7;">Acesse com suas credenciais</p>
+        <div style="text-align: center; margin-bottom: 28px;">
+            <div style="width: 48px; height: 48px; margin: 0 auto 14px; border-radius: 14px; background: rgba(13, 202, 240, 0.15); border: 1px solid rgba(13, 202, 240, 0.4); display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                ⚡
+            </div>
+            <h2 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.02em;">TechStore <span style="color: #0dcaf0;">SGI</span></h2>
+            <p style="margin: 6px 0 0 0; font-size: 13.5px; color: rgba(255,255,255,0.65);">Acesse o painel com suas credenciais</p>
         </div>
 
-          {% with messages = get_flashed_messages(with_categories=true) %}
-                    {% if messages %}
-                              {% for category, message in messages %}
-                                        <div class="{% if category == 'success' %}alert-success-glass{% else %}alert-danger-glass{% endif %}">
-                    {{ message }}
-                                        </div>
-                              {% endfor %}
-                    {% endif %}
-          {% endwith %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'success' %}alert-success-glass{% else %}alert-danger-glass{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
 
         <form method="POST" action="/login">
-            <div style="margin-bottom: 15px;">
-                <label style="font-size: 13px; display: block; margin-bottom: 5px;">E-mail Corporativo</label>
+            <div class="form-group">
+                <label>E-mail Corporativo</label>
                 <input type="email" name="email" class="form-control" placeholder="ex: operador@techstore.com" required>
             </div>
-            <div style="margin-bottom: 25px;">
-                <label style="font-size: 13px; display: block; margin-bottom: 5px;">Senha</label>
-                <input type="password" name="senha" class="form-control" placeholder="******" required>
+            <div class="form-group" style="margin-bottom: 24px;">
+                <label>Senha</label>
+                <input type="password" name="senha" class="form-control" placeholder="••••••••" required>
             </div>
-            <button type="submit" class="btn-glass" style="width: 100%; background: rgba(13, 202, 240, 0.2); border-color: rgba(13, 202, 240, 0.4); color: #0dcaf0; cursor: pointer;">Entrar no Sistema</button>
+            <button type="submit" class="btn-glass btn-cyan" style="width: 100%; padding: 12px; font-size: 14px;">Entrar no Sistema</button>
         </form>
     </div>
 

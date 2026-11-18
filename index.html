@@ -3,104 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TechStore - Painel SGI</title>
+    <title>TechStore WMS - Controle de Estoque</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
 
-    <div class="glass-panel">
-        <!-- Barra Superior com Usuário e Logout -->
-        <div class="user-bar">
+<div class="app-shell">
+    <!-- Barra Lateral Fixa -->
+    <aside class="sidebar">
+        <div class="brand-box">
+            <div class="brand-icon">📦</div>
             <div>
-                <h1 style="margin: 0; font-size: 22px;">TechStore SGI</h1>
-                <p style="margin: 0; font-size: 13px; opacity: 0.7;">
-                    Usuário: <strong>{{ session.get('nome', 'Operador') }}</strong>
-                    <span class="badge-perfil">{{ session.get('perfil', 'OPERADOR') }}</span>
-                </p>
+                <div class="brand-title">TechStore</div>
+                <div class="brand-sub">WMS & Estoque</div>
             </div>
-            <a href="/logout" class="btn-glass" style="background: rgba(255, 75, 75, 0.2); border-color: rgba(255, 75, 75, 0.4); margin-top: 10px; color: #ff6b6b; font-size: 13px;">🚪 Sair</a>
         </div>
+
+        <div class="nav-label">Operações</div>
+        <nav class="nav-menu">
+            <a href="/" class="nav-item active">📊 Posição de Estoque</a>
+            <a href="/movimentacao" class="nav-item">⇄ Entrada / Saída</a>
+            <a href="/produto/novo" class="nav-item">➕ Cadastrar SKU</a>
+            <a href="/venda/checkout" class="nav-item">🛒 Expedição / PDV</a>
+            {% if session.get('perfil') == 'GERENTE' %}
+                <button type="button" onclick="toggleExcluirDiv()" class="nav-item danger">🗑️ Baixa / Excluir SKU</button>
+            {% endif %}
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="user-card">
+                <span class="user-name">{{ session.get('nome', 'Operador') }}</span>
+                <span class="badge-perfil">{{ session.get('perfil', 'OPERADOR') }}</span>
+            </div>
+            <a href="/logout" class="btn btn-danger" style="width: 100%;">🚪 Encerrar Sessão</a>
+        </div>
+    </aside>
+
+    <!-- Área Principal -->
+    <main class="main-content">
+        <header class="topbar">
+            <div>
+                <h1>Posição Geral de Estoque</h1>
+                <p>Monitoramento em tempo real de SKUs, saldos físicos e endereçamento</p>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <a href="/movimentacao" class="btn btn-primary">⇄ Nova Movimentação</a>
+                <a href="/produto/novo" class="btn btn-success">+ Novo SKU</a>
+            </div>
+        </header>
 
         <!-- Mensagens Flash -->
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            <div class="{% if category == 'success' %}alert-success-glass{% else %}alert-danger-glass{% endif %}">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-
-        <!-- Ações do Sistema -->
-        <div style="margin: 20px 0; display: flex; gap: 10px; flex-wrap: wrap;">
-            <a href="/venda/checkout" class="btn-glass" style="background: rgba(13, 202, 240, 0.2); border-color: rgba(13, 202, 240, 0.4); color: #0dcaf0;">🛒 Frente de Caixa (PDV)</a>
-            <a href="/produto/novo" class="btn-glass">+ Novo Ativo</a>
-            <a href="/movimentacao" class="btn-glass">Lançar Movimentação</a>
-
-            <!-- RBAC: Exclusão visível apenas para Gerente -->
-            {% if session.get('perfil') == 'GERENTE' %}
-                <button onclick="toggleExcluirDiv()" class="btn-glass" style="background: rgba(255, 75, 75, 0.2); border-color: rgba(255, 75, 75, 0.4); color: #ff6b6b; cursor: pointer;">Excluir Ativo</button>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="{% if category == 'success' %}alert-success-glass{% else %}alert-danger-glass{% endif %}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             {% endif %}
-        </div>
+        {% endwith %}
+
+        <!-- Cards de KPI do Estoque -->
+        <section class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-title">SKUs Ativos</div>
+                <div class="kpi-value" id="kpi-skus">{{ produtos|length }}</div>
+                <div class="kpi-sub">Itens distintos catalogados</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-title">Volume Físico Total</div>
+                <div class="kpi-value" id="kpi-unidades">0</div>
+                <div class="kpi-sub">Unidades armazenadas</div>
+            </div>
+            <div class="kpi-card green">
+                <div class="kpi-title">Valor em Estoque</div>
+                <div class="kpi-value" id="kpi-valor">R$ 0,00</div>
+                <div class="kpi-sub">Capital imobilizado</div>
+            </div>
+            <div class="kpi-card danger">
+                <div class="kpi-title">Estoque Crítico (&le; 5)</div>
+                <div class="kpi-value" id="kpi-critico">0</div>
+                <div class="kpi-sub">SKUs precisando reposição</div>
+            </div>
+        </section>
 
         <!-- Painel de Exclusão (Gerencial) -->
         {% if session.get('perfil') == 'GERENTE' %}
-        <div id="painel-excluir" style="display: none; background: rgba(255, 255, 255, 0.03); padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid rgba(255, 75, 75, 0.3);">
-            <h3 style="margin-top: 0; font-size: 15px; color: #ff6b6b;">Painel de Exclusão de Ativos</h3>
-            <form action="/produto/excluir-selecionado" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este ativo e seus vínculos?');" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: center;">
-                <select name="id_produto" class="form-select" style="flex: 1; min-width: 220px;" required>
-                    <option value="">Selecione o produto para excluir...</option>
+        <div id="painel-excluir" style="display: none; background: rgba(255, 107, 107, 0.08); padding: 18px; border-radius: 14px; margin-bottom: 24px; border: 1px solid rgba(255, 107, 107, 0.35);">
+            <h3 style="font-size: 13px; color: #ff6b6b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 12px;">Remover SKU do Catálogo (Ação Gerencial)</h3>
+            <form action="/produto/excluir-selecionado" method="POST" onsubmit="return confirm('Tem certeza que deseja excluir este ativo e seus vínculos?');" style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                <select name="id_produto" class="form-select" style="flex: 1; min-width: 240px;" required>
+                    <option value="">Selecione o SKU para excluir...</option>
                     {% for item in produtos %}
                     <option value="{{ item.id_produto }}">{{ item.sku }} - {{ item.nome_comercial }}</option>
                     {% endfor %}
                 </select>
-                <button type="submit" class="btn-glass" style="background: rgba(255, 75, 75, 0.3); border-color: rgba(255, 75, 75, 0.5); color: #ff6b6b; cursor: pointer;">Confirmar Exclusão</button>
+                <button type="submit" class="btn btn-danger">Confirmar Exclusão</button>
             </form>
         </div>
         {% endif %}
 
-        <!-- Tabela -->
-        <div class="table-responsive">
-            <table class="glass-table">
-                <thead>
-                    <tr>
-                        <th>SKU</th>
-                        <th>Ativo</th>
-                        <th>Fabricante</th>
-                        <th>Categoria</th>
-                        <th>Fornecedor</th>
-                        <th>Preço</th>
-                        <th>Saldo</th>
-                        <th>Localização</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in produtos %}
-                    <tr>
-                        <td>{{ item.sku }}</td>
-                        <td>{{ item.nome_comercial }}</td>
-                        <td>{{ item.fabricante }}</td>
-                        <td>{{ item.categoria }}</td>
-                        <td>{{ item.fornecedor }}</td>
-                        <td>R$ {{ "%.2f"|format(item.preco_venda) }}</td>
-                        <td>{{ item.quantidade_estoque }}</td>
-                        <td>{{ item.localizacao }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-    </div>
+        <!-- Tabela de Inventário -->
+        <section class="panel-box">
+            <div class="toolbar">
+                <div class="search-box">
+                    <span>🔍</span>
+                    <input type="text" id="filtro-estoque" placeholder="Filtrar por SKU, produto, fabricante ou corredor..." onkeyup="filtrarTabela()">
+                </div>
+                <button type="button" id="btn-critico" class="btn" onclick="alternarFiltroCritico()">⚠️ Mostrar apenas estoque crítico</button>
+            </div>
 
-    <script>
-        function toggleExcluirDiv() {
-            var painel = document.getElementById('painel-excluir');
-            if (painel) {
-                painel.style.display = (painel.style.display === 'none' || painel.style.display === '') ? 'block' : 'none';
-            }
+            <div class="table-responsive">
+                <table class="wms-table" id="tabela-estoque">
+                    <thead>
+                        <tr>
+                            <th>SKU</th>
+                            <th>Produto / Ativo</th>
+                            <th>Fabricante</th>
+                            <th>Categoria</th>
+                            <th>Fornecedor</th>
+                            <th>Valor Unit.</th>
+                            <th>Saldo</th>
+                            <th>Status</th>
+                            <th>Endereçamento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in produtos %}
+                        <tr data-preco="{{ item.preco_venda }}" data-qtd="{{ item.quantidade_estoque }}">
+                            <td><span class="sku-badge">{{ item.sku }}</span></td>
+                            <td style="font-weight: 600;">{{ item.nome_comercial }}</td>
+                            <td>{{ item.fabricante }}</td>
+                            <td>{{ item.categoria }}</td>
+                            <td style="color: rgba(255,255,255,0.75);">{{ item.fornecedor }}</td>
+                            <td style="font-family: 'JetBrains Mono', monospace; white-space: nowrap;">R$ {{ "%.2f"|format(item.preco_venda) }}</td>
+                            <td style="font-family: 'JetBrains Mono', monospace; font-weight: 700;">{{ item.quantidade_estoque }}</td>
+                            <td>
+                                {% if item.quantidade_estoque <= 5 %}
+                                    <span class="status-pill status-low">● Crítico</span>
+                                {% else %}
+                                    <span class="status-pill status-ok">● Normal</span>
+                                {% endif %}
+                            </td>
+                            <td><span class="loc-badge">📍 {{ item.localizacao }}</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+</div>
+
+<script>
+    let apenasCriticos = false;
+
+    // Calcula os indicadores do topo automaticamente a partir das linhas da tabela
+    document.addEventListener('DOMContentLoaded', () => {
+        const linhas = document.querySelectorAll('#tabela-estoque tbody tr');
+        let totalUnidades = 0;
+        let valorTotal = 0;
+        let itensCriticos = 0;
+
+        linhas.forEach(tr => {
+            const preco = parseFloat(tr.dataset.preco) || 0;
+            const qtd = parseInt(tr.dataset.qtd) || 0;
+            totalUnidades += qtd;
+            valorTotal += (preco * qtd);
+            if (qtd <= 5) itensCriticos++;
+        });
+
+        document.getElementById('kpi-unidades').textContent = totalUnidades.toLocaleString('pt-BR');
+        document.getElementById('kpi-valor').textContent = valorTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('kpi-critico').textContent = itensCriticos;
+    });
+
+    function filtrarTabela() {
+        const termo = document.getElementById('filtro-estoque').value.toLowerCase();
+        const linhas = document.querySelectorAll('#tabela-estoque tbody tr');
+
+        linhas.forEach(tr => {
+            const texto = tr.innerText.toLowerCase();
+            const qtd = parseInt(tr.dataset.qtd) || 0;
+            const bateTexto = texto.includes(termo);
+            const bateCritico = !apenasCriticos || qtd <= 5;
+            tr.style.display = (bateTexto && bateCritico) ? '' : 'none';
+        });
+    }
+
+    function alternarFiltroCritico() {
+        apenasCriticos = !apenasCriticos;
+        const btn = document.getElementById('btn-critico');
+        btn.classList.toggle('btn-danger', apenasCriticos);
+        btn.textContent = apenasCriticos ? '⚠️ Exibindo críticos (Limpar)' : '⚠️ Mostrar apenas estoque crítico';
+        filtrarTabela();
+    }
+
+    function toggleExcluirDiv() {
+        const painel = document.getElementById('painel-excluir');
+        if (painel) {
+            painel.style.display = (painel.style.display === 'none' || painel.style.display === '') ? 'block' : 'none';
         }
-    </script>
+    }
+</script>
 
 </body>
 </html>
